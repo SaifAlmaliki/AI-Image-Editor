@@ -1,3 +1,17 @@
+/**
+ * Application Constants
+ *
+ * This file contains all the constant values and configurations used throughout the application.
+ * It includes:
+ * 1. Navigation links and routes
+ * 2. Subscription plans and pricing
+ * 3. Image transformation configurations
+ * 4. Aspect ratio presets
+ * 5. Default form values
+ * 6. Credit system configuration
+ */
+
+// Navigation links configuration for sidebar and mobile navigation
 export const navLinks = [
   {
     label: "Home",
@@ -29,6 +43,7 @@ export const navLinks = [
     route: "/transformations/add/removeBackground",
     icon: "/assets/icons/camera.svg",
   },
+  // User-related navigation items
   {
     label: "Profile",
     route: "/profile",
@@ -41,6 +56,7 @@ export const navLinks = [
   },
 ];
 
+// Subscription plans with pricing and features
 export const plans = [
   {
     _id: 1,
@@ -119,6 +135,7 @@ export const plans = [
   },
 ];
 
+// Image transformation types with their configurations and UI elements
 export const transformationTypes = {
   restore: {
     type: "restore",
@@ -161,6 +178,7 @@ export const transformationTypes = {
   },
 };
 
+// Predefined aspect ratio options for image transformations
 export const aspectRatioOptions = {
   "1:1": {
     aspectRatio: "1:1",
@@ -182,6 +200,7 @@ export const aspectRatioOptions = {
   },
 };
 
+// Default values for image transformation forms
 export const defaultValues = {
   title: "",
   aspectRatio: "",
@@ -190,4 +209,5 @@ export const defaultValues = {
   publicId: "",
 };
 
+// Credit cost for each transformation operation
 export const creditFee = -1;
