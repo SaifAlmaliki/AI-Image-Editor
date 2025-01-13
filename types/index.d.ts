@@ -144,9 +144,9 @@ declare type TransformationTypeKey =
  * Used in routing and navigation
  */
 declare type FormUrlQueryParams = {
-  searchParams: string;    // Current search parameters
-  key: string;            // Parameter key to modify
-  value: string | number | null; // New value for the parameter
+  searchParams: string;     // Current search parameters
+  key: string;              // Parameter key to modify
+  value: string | number;   // New value for the parameter
 };
 
 /**
@@ -183,7 +183,7 @@ declare type SearchParamProps = {
  */
 declare type TransformationFormProps = {
   action: "Add" | "Update"; // Form action type
-  userId: string;          // User ID for the transformation
+  userId: string;           // User ID for the transformation
   type: TransformationTypeKey; // Transformation type
   creditBalance: number;   // User's current credit balance
   data?: IImage | null;    // Image data for the transformation

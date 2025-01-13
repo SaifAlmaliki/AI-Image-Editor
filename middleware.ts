@@ -19,8 +19,8 @@ export default authMiddleware({
   publicRoutes: [
     '/',                    // Home page
     '/api/webhooks/clerk',  // Clerk webhook endpoint
-    '/api/webhooks/stripe'  // Stripe webhook endpoint
-  ]
+    '/api/webhooks/stripe', // Stripe webhook endpoint
+  ],
 });
 
 // Configure route matching for the middleware
@@ -30,8 +30,8 @@ export const config = {
   // - Explicitly matches the root path
   // - Matches all API and tRPC routes
   matcher: [
-    "/((?!.+\\.[\\w]+$|_next).*)", // Match all except static files/_next
+    "/((?!.+\\.[\\w]+$|_next).*)",  // Match all except static files/_next
     "/",                            // Match root path
-    "/(api|trpc)(.*)"              // Match API and tRPC routes
+    "/(api|trpc)(.*)"               // Match API and tRPC routes
   ],
 };

@@ -1,27 +1,27 @@
+/**
+ * TransformationForm Component
+ *
+ * A complex form component that handles image transformations using Cloudinary.
+ * Manages form state, image uploads, transformations, and credit system.
+ *
+ * Features:
+ * - Dynamic form fields based on transformation type
+ * - Real-time image preview
+ * - Credit balance management
+ * - Form validation using Zod
+ * - Cloudinary integration
+ * - Optimistic updates
+ */
+
 "use client"
- 
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { aspectRatioOptions, creditFee, defaultValues, transformationTypes } from "@/constants"
 import { CustomField } from "./CustomField"
@@ -34,7 +34,11 @@ import { getCldImageUrl } from "next-cloudinary"
 import { addImage, updateImage } from "@/lib/actions/image.actions"
 import { useRouter } from "next/navigation"
 import { InsufficientCreditsModal } from "./InsufficientCreditsModal"
- 
+
+/**
+ * Zod schema for form validation
+ * Defines required and optional fields for image transformation
+ */
 export const formSchema = z.object({
   title: z.string(),
   aspectRatio: z.string().optional(),
@@ -43,8 +47,22 @@ export const formSchema = z.object({
   publicId: z.string(),
 })
 
-const TransformationForm = ({ action, data = null, userId, type, creditBalance, config = null }: TransformationFormProps) => {
+/**
+ * Main transformation form component
+ * Handles image uploads, transformations, and form submissions
+ */
+const TransformationForm = ({
+  action,
+  data = null,
+  userId,
+  type,
+  creditBalance,
+  config = null
+}: TransformationFormProps) => {
+  // Get transformation type configuration
   const transformationType = transformationTypes[type];
+
+  // State management for form and transformations
   const [image, setImage] = useState(data)
   const [newTransformation, setNewTransformation] = useState<Transformations | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,6 +71,7 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
+  // Set initial form values based on action type
   const initialValues = data && action === 'Update' ? {
     title: data?.title,
     aspectRatio: data?.aspectRatio,
@@ -61,17 +80,21 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
     publicId: data?.publicId,
   } : defaultValues
 
-   // 1. Define your form.
-   const form = useForm<z.infer<typeof formSchema>>({
+  // Initialize form with Zod validation
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: initialValues,
   })
- 
-  // 2. Define a submit handler.
+
+  /**
+   * Handle form submission
+   * Processes image transformation and saves to database
+   */
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
 
     if(data || image) {
+      // Generate Cloudinary transformation URL
       const transformationUrl = getCldImageUrl({
         width: image?.width,
         height: image?.height,
@@ -79,6 +102,7 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
         ...transformationConfig
       })
 
+      // Prepare image data for database
       const imageData = {
         title: values.title,
         publicId: image?.publicId,
@@ -93,6 +117,7 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
         color: values.color,
       }
 
+      // Handle new image creation
       if(action === 'Add') {
         try {
           const newImage = await addImage({
@@ -111,6 +136,7 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
         }
       }
 
+      // Handle image update
       if(action === 'Update') {
         try {
           const updatedImage = await updateImage({
@@ -134,6 +160,10 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
     setIsSubmitting(false)
   }
 
+  /**
+   * Handle aspect ratio selection
+   * Updates image dimensions based on selected ratio
+   */
   const onSelectFieldHandler = (value: string, onChangeField: (value: string) => void) => {
     const imageSize = aspectRatioOptions[value as AspectRatioKey]
 
@@ -149,20 +179,28 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
     return onChangeField(value)
   }
 
+  /**
+   * Handle input field changes
+   * Updates transformation configuration with debouncing
+   */
   const onInputChangeHandler = (fieldName: string, value: string, type: string, onChangeField: (value: string) => void) => {
     debounce(() => {
       setNewTransformation((prevState: any) => ({
         ...prevState,
         [type]: {
           ...prevState?.[type],
-          [fieldName === 'prompt' ? 'prompt' : 'to' ]: value 
+          [fieldName === 'prompt' ? 'prompt' : 'to' ]: value
         }
       }))
     }, 1000)();
-      
+
     return onChangeField(value)
   }
 
+  /**
+   * Handle transformation process
+   * Updates credits and applies transformation
+   */
   const onTransformHandler = async () => {
     setIsTransforming(true)
 
@@ -177,6 +215,7 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
     })
   }
 
+  // Auto-apply transformation for restore and removeBackground types
   useEffect(() => {
     if(image && (type === 'restore' || type === 'removeBackground')) {
       setNewTransformation(transformationType.config)
@@ -186,15 +225,20 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {/* Show warning if insufficient credits */}
         {creditBalance < Math.abs(creditFee) && <InsufficientCreditsModal />}
-        <CustomField 
+
+        {/* Image title field */}
+        <CustomField
           control={form.control}
           name="title"
           formLabel="Image Title"
           className="w-full"
-          render={({ field }) => <Input {...field} className="input-field" />}
+          render={({ field }) => <Input {...field}
+          className="input-field" />}
         />
 
+        {/* Aspect ratio field for fill transformation */}
         {type === 'fill' && (
           <CustomField
             control={form.control}
@@ -217,13 +261,14 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
                   ))}
                 </SelectContent>
               </Select>
-            )}  
+            )}
           />
         )}
 
+        {/* Color field for recolor transformation */}
         {(type === 'remove' || type === 'recolor') && (
           <div className="prompt-field">
-            <CustomField 
+            <CustomField
               control={form.control}
               name="prompt"
               formLabel={
@@ -231,7 +276,7 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
               }
               className="w-full"
               render={({ field }) => (
-                <Input 
+                <Input
                   value={field.value}
                   className="input-field"
                   onChange={(e) => onInputChangeHandler(
@@ -245,13 +290,13 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
             />
 
             {type === 'recolor' && (
-              <CustomField 
+              <CustomField
                 control={form.control}
                 name="color"
                 formLabel="Replacement Color"
                 className="w-full"
                 render={({ field }) => (
-                  <Input 
+                  <Input
                     value={field.value}
                     className="input-field"
                     onChange={(e) => onInputChangeHandler(
@@ -267,13 +312,14 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
           </div>
         )}
 
+        {/* Media upload section */}
         <div className="media-uploader-field">
-          <CustomField 
+          <CustomField
             control={form.control}
             name="publicId"
             className="flex size-full flex-col"
             render={({ field }) => (
-              <MediaUploader 
+              <MediaUploader
                 onValueChange={field.onChange}
                 setImage={setImage}
                 publicId={field.value}
@@ -283,7 +329,8 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
             )}
           />
 
-          <TransformedImage 
+          {/* Image transformation preview */}
+          <TransformedImage
             image={image}
             type={type}
             title={form.getValues().title}
@@ -294,7 +341,7 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
         </div>
 
         <div className="flex flex-col gap-4">
-          <Button 
+          <Button
             type="button"
             className="submit-button capitalize"
             disabled={isTransforming || newTransformation === null}
@@ -302,7 +349,7 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
           >
             {isTransforming ? 'Transforming...' : 'Apply Transformation'}
           </Button>
-          <Button 
+          <Button
             type="submit"
             className="submit-button capitalize"
             disabled={isSubmitting}
