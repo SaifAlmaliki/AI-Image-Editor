@@ -3,14 +3,6 @@
  *
  * A complex form component that handles image transformations using Cloudinary.
  * Manages form state, image uploads, transformations, and credit system.
- *
- * Features:
- * - Dynamic form fields based on transformation type
- * - Real-time image preview
- * - Credit balance management
- * - Form validation using Zod
- * - Cloudinary integration
- * - Optimistic updates
  */
 
 "use client"
